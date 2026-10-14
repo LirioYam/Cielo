@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cielo | Consulta del clima</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="encabezado">
+    <h1>Cielo</h1>
+    <p>El clima de tu ciudad, en un solo lugar.</p>
+  </header>
+
+  <main>
+    <section class="tarjeta" aria-labelledby="titulo-buscador">
+      <h2 id="titulo-buscador">Busca una ciudad</h2>
+
+      <form id="formulario-clima">
+        <label for="ciudad">Nombre de la ciudad</label>
+        <input
+          type="text"
+          id="ciudad"
+          name="ciudad"
+          placeholder="Ejemplo: Guadalajara"
+          aria-describedby="nota-etapa"
+        >
+        <button id="boton-consultar" type="submit" aria-describedby="nota-etapa">
+          Consultar clima
+        </button>
+        <p id="nota-etapa" class="nota">
+          Escribe una ciudad para consultar su clima actual.
+        </p>
+      </form>
+    </section>
+
+    <section id="resultados" class="tarjeta" aria-labelledby="titulo-resultados">
+      <h2 id="titulo-resultados">Resultados del clima</h2>
+      <p id="mensaje" role="status">Aquí aparecerá la información del clima de la ciudad que consultes.</p>
+      <div id="datos-clima" hidden>
+        <h3 id="ciudad-resultado"></h3>
+        <dl>
+          <dt>Temperatura actual</dt>
+          <dd id="temperatura"></dd>
+          <dt>Sensación térmica</dt>
+          <dd id="sensacion"></dd>
+          <dt>Humedad relativa</dt>
+          <dd id="humedad"></dd>
+          <dt>Velocidad del viento</dt>
+          <dd id="viento"></dd>
+          <dt>Estado del clima</dt>
+          <dd id="descripcion"></dd>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Cielo · Proyecto universitario</p>
+    <p>Datos meteorológicos de <a href="https://open-meteo.com/">Open-Meteo</a>.</p>
+  </footer>
+</body>
+</html>
