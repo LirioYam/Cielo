@@ -5,7 +5,20 @@ const botonConsultar = document.getElementById("boton-consultar");
 const mensaje = document.getElementById("mensaje");
 const datosClima = document.getElementById("datos-clima");
 const bienvenida = document.getElementById("bienvenida");
-const resultados = document.getElementById("resultados");
+const indicadorCarga = document.getElementById("indicador-carga");
+const textoBoton = document.getElementById("texto-boton");
+
+const TIEMPO_LIMITE = 10000; // Diez segundos para cada petición, incluido el JSON.
+const MENSAJES_ERROR = {
+  conexion: "No pudimos conectarnos. Revisa tu conexión a Internet e intenta nuevamente.",
+  tiempo: "La consulta tardó demasiado. Intenta de nuevo en unos momentos.",
+  limite: "Se alcanzó el límite de consultas. Espera un momento antes de volver a intentarlo.",
+  servidor: "El servicio del clima no está disponible por ahora. Intenta más tarde.",
+  solicitud: "El servicio no pudo procesar la consulta. Intenta nuevamente más tarde.",
+  sinDatos: "El servicio no devolvió datos completos para esta ciudad. Intenta nuevamente más tarde.",
+  respuesta: "El servicio devolvió una respuesta que no pudimos interpretar. Intenta más tarde.",
+  general: "No se pudo consultar el clima. Intenta nuevamente."
+};
 
 formulario.addEventListener("submit", consultarClima);
 
@@ -21,42 +34,95 @@ async function consultarClima(evento) {
   const nombre = entradaCiudad.value.trim();
   datosClima.hidden = true;
   bienvenida.hidden = false;
+  entradaCiudad.removeAttribute("aria-invalid");
 
   if (nombre === "") {
-    mensaje.textContent = "Escribe el nombre de una ciudad.";
+    mostrarMensaje("Escribe el nombre de una ciudad para consultar su clima.", true);
+    entradaCiudad.setAttribute("aria-invalid", "true");
+    entradaCiudad.focus();
     return;
   }
 
-  mensaje.textContent = "Consultando el clima...";
-  botonConsultar.disabled = true;
-  entradaCiudad.disabled = true;
-  resultados.setAttribute("aria-busy", "true");
+  cambiarCarga(true);
+  mostrarMensaje("Consultando el clima…");
 
   try {
     const ciudad = await buscarCiudad(nombre);
 
     if (!ciudad) {
-      mensaje.textContent = "No se encontró la ciudad. Prueba con otro nombre.";
+      mostrarMensaje("No encontramos esa ciudad. Revisa el nombre o prueba con otra ciudad.", true);
+      entradaCiudad.setAttribute("aria-invalid", "true");
       return;
     }
 
     const clima = await obtenerClima(ciudad);
 
     if (!clima) {
-      mensaje.textContent = "No hay datos del clima disponibles para esta ciudad.";
-      return;
+      throw new Error("sinDatos");
     }
 
     mostrarClima(ciudad, clima);
-    mensaje.textContent = "Consulta completada.";
+    mostrarMensaje("Consulta completada.");
   } catch (error) {
-    // Mensaje básico; el manejo completo de errores queda para otra etapa.
-    mensaje.textContent = "No se pudo consultar el clima. Intenta nuevamente.";
+    // Mostramos nuestros mensajes, sin exponer detalles técnicos de la API.
+    mostrarMensaje(MENSAJES_ERROR[error.message] || MENSAJES_ERROR.general, true);
   } finally {
-    // Se ejecuta también cuando no encontramos una ciudad o sus datos.
-    botonConsultar.disabled = false;
-    entradaCiudad.disabled = false;
-    resultados.setAttribute("aria-busy", "false");
+    // Siempre permite una nueva búsqueda, incluso si hubo un error.
+    cambiarCarga(false);
+  }
+}
+
+function mostrarMensaje(texto, esError = false) {
+  mensaje.textContent = texto;
+  mensaje.classList.toggle("es-error", esError);
+}
+
+function cambiarCarga(activa) {
+  indicadorCarga.hidden = !activa;
+  botonConsultar.disabled = activa;
+  entradaCiudad.disabled = activa;
+  textoBoton.textContent = activa ? "Consultando…" : "Consultar clima";
+  // El mensaje queda fuera del área ocupada para que se anuncie durante la carga.
+  datosClima.setAttribute("aria-busy", String(activa));
+}
+
+// Ambas APIs comparten el tiempo límite y las comprobaciones de la respuesta.
+async function solicitarDatos(url) {
+  if (navigator.onLine === false) {
+    throw new Error("conexion");
+  }
+
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), TIEMPO_LIMITE);
+
+  try {
+    const respuesta = await fetch(url, { signal: controlador.signal });
+
+    if (respuesta.status === 429) throw new Error("limite");
+    if (respuesta.status === 408 || respuesta.status === 504) throw new Error("tiempo");
+    if (respuesta.status >= 500) throw new Error("servidor");
+    if (!respuesta.ok) throw new Error("solicitud");
+    if (respuesta.status === 204) throw new Error("sinDatos");
+
+    const datos = await respuesta.json();
+
+    if (!datos || (typeof datos === "object" && Object.keys(datos).length === 0)) {
+      throw new Error("sinDatos");
+    }
+    if (typeof datos !== "object" || Array.isArray(datos)) {
+      throw new Error("respuesta");
+    }
+    if (datos.error) throw new Error("solicitud");
+
+    return datos;
+  } catch (error) {
+    if (controlador.signal.aborted) throw new Error("tiempo");
+    if (error.name === "TypeError") throw new Error("conexion");
+    if (error.name === "SyntaxError") throw new Error("respuesta");
+    throw error;
+  } finally {
+    // También se limpia el temporizador si el servidor o el JSON fallan.
+    clearTimeout(temporizador);
   }
 }
 
@@ -69,25 +135,27 @@ async function buscarCiudad(nombre) {
     format: "json"
   });
 
-  const respuesta = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${parametros}`);
+  const datos = await solicitarDatos(`https://geocoding-api.open-meteo.com/v1/search?${parametros}`);
 
-  if (!respuesta.ok) {
-    throw new Error("No se pudo buscar la ciudad.");
-  }
-
-  const datos = await respuesta.json();
-
-  if (!datos.results || datos.results.length === 0) {
+  // Open-Meteo puede omitir results cuando no encuentra coincidencias.
+  if (datos.results === undefined) {
     return null;
   }
+  if (!Array.isArray(datos.results)) throw new Error("respuesta");
+  if (datos.results.length === 0) return null;
 
   // En esta etapa usamos la primera coincidencia de la API.
-  return datos.results[0];
+  const ciudad = datos.results[0];
+  if (!ciudad || typeof ciudad.name !== "string" || ciudad.name.trim() === "") {
+    throw new Error("sinDatos");
+  }
+  return ciudad;
 }
 
 // Segunda petición: utiliza las coordenadas para obtener el clima actual.
 async function obtenerClima(ciudad) {
-  if (!Number.isFinite(ciudad.latitude) || !Number.isFinite(ciudad.longitude)) {
+  if (!Number.isFinite(ciudad.latitude) || !Number.isFinite(ciudad.longitude)
+      || Math.abs(ciudad.latitude) > 90 || Math.abs(ciudad.longitude) > 180) {
     return null;
   }
 
@@ -99,13 +167,7 @@ async function obtenerClima(ciudad) {
     wind_speed_unit: "kmh"
   });
 
-  const respuesta = await fetch(`https://api.open-meteo.com/v1/forecast?${parametros}`);
-
-  if (!respuesta.ok) {
-    throw new Error("No se pudo obtener el clima.");
-  }
-
-  const datos = await respuesta.json();
+  const datos = await solicitarDatos(`https://api.open-meteo.com/v1/forecast?${parametros}`);
   const clima = datos.current;
 
   if (!clima) {

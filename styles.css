@@ -314,11 +314,51 @@ button:focus-visible, a:focus-visible {
   border-radius: 50%;
   background: #7ba5a0;
 }
-.mensaje {
+.estado-consulta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   min-height: 18px;
   margin: 8px 0 14px;
+}
+.mensaje {
+  margin: 0;
   font-size: 12px;
   color: var(--texto-suave);
+}
+.mensaje.es-error {
+  padding: 8px 12px;
+  border: 1px solid #edd7d5;
+  border-radius: 10px;
+  background: #fff6f4;
+  color: #955354;
+}
+
+/* Una nube con un aro suave indica que la consulta sigue en curso. */
+.indicador-carga {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  color: #739dca;
+}
+.indicador-carga::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid #dce8f4;
+  border-top-color: #739dca;
+  border-radius: 50%;
+  animation: girar 1.2s linear infinite;
+}
+.indicador-carga .icono {
+  width: 15px;
+  height: 15px;
+}
+@keyframes girar {
+  to { transform: rotate(360deg); }
 }
 .bienvenida {
   position: relative;

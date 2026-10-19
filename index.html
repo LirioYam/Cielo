@@ -103,10 +103,10 @@
         <div class="fila-busqueda">
           <div class="campo-ciudad">
             <svg class="icono" aria-hidden="true"><use href="#icono-buscar"/></svg>
-            <input type="text" id="ciudad" name="ciudad" placeholder="Escribe una ciudad…" aria-describedby="nota-etapa" autocomplete="off" enterkeyhint="search">
+            <input type="text" id="ciudad" name="ciudad" placeholder="Escribe una ciudad…" aria-describedby="nota-etapa mensaje" autocomplete="off" enterkeyhint="search">
           </div>
           <button id="boton-consultar" type="submit">
-            <span>Consultar clima</span>
+            <span id="texto-boton">Consultar clima</span>
             <svg class="icono" aria-hidden="true"><use href="#icono-flecha"/></svg>
           </button>
         </div>
@@ -119,7 +119,12 @@
         <h2 id="titulo-resultados">Tu ventana al cielo</h2>
         <span class="etiqueta-actual"><span></span> Clima actual</span>
       </div>
-      <p id="mensaje" class="mensaje" role="status">Todo empieza con una ciudad.</p>
+      <div class="estado-consulta">
+        <span id="indicador-carga" class="indicador-carga" aria-hidden="true" hidden>
+          <svg class="icono"><use href="#icono-nube"/></svg>
+        </span>
+        <p id="mensaje" class="mensaje" role="status" aria-atomic="true">Todo empieza con una ciudad.</p>
+      </div>
 
       <div id="bienvenida" class="tarjeta bienvenida">
         <span class="orbita" aria-hidden="true"></span>
