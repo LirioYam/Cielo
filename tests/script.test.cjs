@@ -182,6 +182,70 @@ test("Un results incorrecto no se confunde con ciudad inexistente", async () => 
   comprobarError(app, /no pudimos interpretar/);
 });
 
+test("Una respuesta sin resultados ni metadatos no significa ciudad inexistente", async () => {
+  const app = crearAplicacion([respuesta({ contenido: "incompleto" })]);
+  await app.buscar();
+  comprobarError(app, /datos completos/);
+});
+
+test("Un error inesperado siempre muestra el mensaje general", async () => {
+  const fallos = [
+    new Error("constructor"), new Error("toString"), new Error("__proto__"),
+    new Error("error inesperado"), () => Promise.reject(null)
+  ];
+  for (const fallo of fallos) {
+    const app = crearAplicacion([fallo]);
+    await app.buscar();
+    comprobarError(app, /^No se pudo consultar el clima\. Intenta nuevamente\.$/);
+  }
+});
+
+test("Las dos peticiones cumplen el contrato de Open-Meteo y codifican los acentos", async () => {
+  const app = crearAplicacion([geocodificacion(), meteorologia()]);
+  await app.buscar("  Mérida  ");
+  assert.equal(app.peticiones.length, 2);
+  const primera = new URL(app.peticiones[0].url);
+  assert.equal(primera.origin, "https://geocoding-api.open-meteo.com");
+  assert.equal(primera.pathname, "/v1/search");
+  assert.equal(primera.searchParams.get("name"), "Mérida");
+  assert.equal(primera.searchParams.get("language"), "es");
+  const segunda = new URL(app.peticiones[1].url);
+  assert.equal(segunda.origin, "https://api.open-meteo.com");
+  assert.equal(segunda.pathname, "/v1/forecast");
+  assert.equal(Number(segunda.searchParams.get("latitude")), ciudad.latitude);
+  assert.equal(Number(segunda.searchParams.get("longitude")), ciudad.longitude);
+  assert.deepEqual(new Set(segunda.searchParams.get("current").split(",")), new Set([
+    "temperature_2m", "apparent_temperature", "relative_humidity_2m", "wind_speed_10m", "weather_code"
+  ]));
+  assert.equal(segunda.searchParams.get("temperature_unit"), "celsius");
+  assert.equal(segunda.searchParams.get("wind_speed_unit"), "kmh");
+  comprobarReposo(app);
+});
+
+test("Una nueva búsqueda limpia la validación y reemplaza todos los datos anteriores", async () => {
+  const otraCiudad = { ...ciudad, name: "Izamal" };
+  const otroClima = { ...clima, temperature_2m: 30, apparent_temperature: 35, relative_humidity_2m: 70, wind_speed_10m: 12, weather_code: 61 };
+  const app = crearAplicacion([
+    geocodificacion(), meteorologia(),
+    respuesta({ results: [otraCiudad] }), respuesta({ current: otroClima })
+  ]);
+  await app.buscar("");
+  assert.equal(app.elementos.ciudad.atributos["aria-invalid"], "true");
+  await app.buscar("Mérida");
+  assert.equal(app.elementos.ciudad.atributos["aria-invalid"], undefined);
+  assert.equal(app.elementos["ciudad-resultado"].textContent, "Mérida");
+  await app.buscar("Izamal");
+  assert.equal(app.elementos["ciudad-resultado"].textContent, "Izamal");
+  assert.equal(app.elementos["pais-resultado"].textContent, "México");
+  assert.equal(app.elementos.temperatura.textContent, "30");
+  assert.equal(app.elementos.sensacion.textContent, "35 °C");
+  assert.equal(app.elementos.humedad.textContent, "70 %");
+  assert.equal(app.elementos.viento.textContent, "12 km/h");
+  assert.equal(app.elementos.descripcion.textContent, "Lluvia ligera");
+  assert.equal(app.elementos["icono-clima"].atributos.href, "#clima-lluvia");
+  comprobarReposo(app);
+});
+
 test("El clima ausente, incompleto o con valores nulos no se muestra", async () => {
   for (const datos of [{ latitude: 20 }, { current: null }, { current: { ...clima, temperature_2m: null } }]) {
     const app = crearAplicacion([geocodificacion(), respuesta(datos)]);

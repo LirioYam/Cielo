@@ -65,7 +65,11 @@ async function consultarClima(evento) {
     mostrarMensaje("Consulta completada.");
   } catch (error) {
     // Mostramos nuestros mensajes, sin exponer detalles técnicos de la API.
-    mostrarMensaje(MENSAJES_ERROR[error.message] || MENSAJES_ERROR.general, true);
+    const tipoError = error && error.message;
+    const texto = Object.hasOwn(MENSAJES_ERROR, tipoError)
+      ? MENSAJES_ERROR[tipoError]
+      : MENSAJES_ERROR.general;
+    mostrarMensaje(texto, true);
   } finally {
     // Siempre permite una nueva búsqueda, incluso si hubo un error.
     cambiarCarga(false);
@@ -117,8 +121,8 @@ async function solicitarDatos(url) {
     return datos;
   } catch (error) {
     if (controlador.signal.aborted) throw new Error("tiempo");
-    if (error.name === "TypeError") throw new Error("conexion");
-    if (error.name === "SyntaxError") throw new Error("respuesta");
+    if (error && error.name === "TypeError") throw new Error("conexion");
+    if (error && error.name === "SyntaxError") throw new Error("respuesta");
     throw error;
   } finally {
     // También se limpia el temporizador si el servidor o el JSON fallan.
@@ -139,12 +143,13 @@ async function buscarCiudad(nombre) {
 
   // Open-Meteo puede omitir results cuando no encuentra coincidencias.
   if (datos.results === undefined) {
-    return null;
+    if (Number.isFinite(datos.generationtime_ms)) return null;
+    throw new Error("sinDatos");
   }
   if (!Array.isArray(datos.results)) throw new Error("respuesta");
   if (datos.results.length === 0) return null;
 
-  // En esta etapa usamos la primera coincidencia de la API.
+  // Usamos la primera coincidencia de la API.
   const ciudad = datos.results[0];
   if (!ciudad || typeof ciudad.name !== "string" || ciudad.name.trim() === "") {
     throw new Error("sinDatos");
@@ -191,8 +196,7 @@ async function obtenerClima(ciudad) {
 }
 
 function mostrarClima(ciudad, clima) {
-  document.getElementById("ciudad-resultado").textContent =
-    ciudad.name;
+  document.getElementById("ciudad-resultado").textContent = ciudad.name;
   document.getElementById("pais-resultado").textContent = ciudad.country || "País no disponible";
   document.getElementById("temperatura").textContent = clima.temperature_2m;
   document.getElementById("sensacion").textContent = `${clima.apparent_temperature} °C`;

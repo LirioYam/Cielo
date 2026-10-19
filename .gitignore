@@ -1,0 +1,14 @@
+# Configuración local y posibles credenciales.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Archivos temporales de herramientas y del sistema.
+node_modules/
+__pycache__/
+*.log
+.DS_Store
+Thumbs.db
