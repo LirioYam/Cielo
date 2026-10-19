@@ -1,120 +1,707 @@
-/* Estilos generales de la página. */
+/* Colores compartidos: cambia estos valores para ajustar la paleta. */
+:root {
+  --texto: #304b65;
+  --texto-suave: #657b90;
+  --azul: #476f9f;
+  --borde: #dce8f4;
+  --sombra: 0 12px 36px #7397bd0c;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  line-height: 1.6;
-  color: #25364a;
-  background-color: #eef5fb;
+  min-height: 100vh;
+  color: var(--texto);
+  background: radial-gradient(ellipse at 15% 15%, #ffffffb0, transparent 50%),
+    linear-gradient(145deg, #edf5ff 0%, #e8f1fc 45%, #f4f2fc 100%);
+  font-family: "Segoe UI", Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-.encabezado {
-  padding: 32px 20px;
-  text-align: center;
-  color: #ffffff;
-  background-color: #23689b;
+[hidden] {
+  display: none !important;
 }
-
-h1 {
-  margin: 0;
-  font-size: 40px;
-}
-
-.encabezado p {
-  margin: 8px 0 0;
-}
-
-/* El ancho máximo mantiene el contenido cómodo de leer. */
-main {
-  max-width: 640px;
-  margin: 32px auto;
-  padding: 0 20px;
-}
-
-.tarjeta {
-  margin-bottom: 24px;
-  padding: 24px;
-  border: 1px solid #cbdce9;
-  border-radius: 12px;
-  background-color: #ffffff;
-}
-
-h2 {
-  margin: 0 0 16px;
-  font-size: 22px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-input,
-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 6px;
+button, input {
   font: inherit;
 }
-
-input {
-  border: 1px solid #7b8fa1;
-  color: #25364a;
-  background-color: #ffffff;
+button, a, input {
+  -webkit-tap-highlight-color: transparent;
 }
 
-input:focus-visible,
-button:focus-visible {
-  outline: 3px solid #23689b;
-  outline-offset: 2px;
+/* El dibujo de los iconos se guarda una sola vez en el HTML. */
+.iconos {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.icono {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
 }
 
-button {
-  margin-top: 16px;
-  border: none;
-  color: #ffffff;
-  background-color: #23689b;
-  cursor: pointer;
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  background-color: #596f82;
+/* Nubes pequeñas al fondo: no reciben clics ni tapan el contenido. */
+.decoracion {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.nube {
+  position: absolute;
+  width: 160px;
+  height: 42px;
+  border-radius: 50px;
+  background: #ffffff80;
+  animation: flotar 9s ease-in-out infinite;
+}
+.nube::before, .nube::after {
+  content: "";
+  position: absolute;
+  bottom: 12px;
+  border-radius: 50%;
+  background: inherit;
+}
+.nube::before {
+  left: 24px;
+  width: 62px;
+  height: 62px;
+}
+.nube::after {
+  right: 20px;
+  width: 82px;
+  height: 82px;
+}
+.nube-uno {
+  left: -55px;
+  top: 250px;
+  transform: rotate(-6deg);
+}
+.nube-dos {
+  right: -38px;
+  top: 470px;
+  opacity: .55;
+  animation-delay: -4s;
+}
+.destello {
+  position: absolute;
+  color: #9fb9d7;
+  font-size: 28px;
+}
+.destello-uno {
+  top: 175px;
+  left: 17%;
+}
+.destello-dos {
+  top: 340px;
+  right: 12%;
+  font-size: 20px;
 }
 
-.nota {
-  margin: 12px 0 0;
+/* Encabezado e introducción. */
+.encabezado {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 30px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.marca {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--texto);
+  text-decoration: none;
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -.8px;
+}
+.marca-icono {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: #ffffffb3;
+  border: 1px solid #ffffff;
+  border-radius: 14px;
+  color: #739dca;
+}
+.punto-marca {
+  color: #8daed3;
+}
+.lema {
+  color: var(--texto-suave);
+  font-size: 12px;
+  letter-spacing: .5px;
+}
+main {
+  width: min(860px, calc(100% - 48px));
+  margin: 0 auto;
+}
+.introduccion {
+  text-align: center;
+  padding: 30px 0 32px;
+}
+.antetitulo {
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 550;
+  letter-spacing: -1.8px;
+  line-height: 1.2;
+}
+h1 span {
+  color: #7394bf;
+}
+.introduccion > p:last-child {
+  color: var(--texto-suave);
   font-size: 14px;
-  color: #526476;
+  margin: 14px 0 0;
 }
 
-/* Cada dato del clima tiene una etiqueta y un valor. */
-#datos-clima h3 {
-  margin: 0 0 16px;
+/* Buscador compacto, con un foco visible para navegar por teclado. */
+.tarjeta {
+  border: 1px solid #ffffff;
+  border-radius: 24px;
+  background: #ffffffd9;
+  box-shadow: var(--sombra);
+}
+.buscador {
+  padding: 24px 28px 20px;
+}
+.buscador h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 15px;
+}
+.fila-busqueda {
+  display: flex;
+  gap: 12px;
+}
+.campo-ciudad {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #f7faff;
+  color: #7f9ab7;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.campo-ciudad:hover {
+  border-color: #b0c8e1;
+}
+.campo-ciudad:focus-within {
+  border-color: #8aafd3;
+  box-shadow: 0 0 0 3px #bed5ed40;
+  background: #ffffff;
+}
+input {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  outline: none;
+  background: transparent;
+  color: var(--texto);
+  font-size: 14px;
+}
+input::placeholder {
+  color: #71859b;
+}
+input:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 22px;
+  border: 1px solid #87a8ce;
+  border-radius: 14px;
+  background: #97b6db;
+  color: #1f3c5b;
+  box-shadow: 0 4px 10px #83a6cc1a;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background .2s, transform .2s, box-shadow .2s;
+}
+button .icono {
+  width: 18px;
+  height: 18px;
+}
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--azul);
+  outline-offset: 4px;
+}
+.nota {
+  margin: 11px 0 0;
+  color: var(--texto-suave);
+  font-size: 11px;
 }
 
-dl {
+/* Resultado: una tarjeta principal y tres datos de lectura rápida. */
+#resultados {
+  margin-top: 30px;
+}
+.cabecera-resultados {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.cabecera-resultados h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.etiqueta-actual {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #586f86;
+  font-size: 10px;
+  background: #ffffff80;
+  border: 1px solid #ffffff;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+.etiqueta-actual span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7ba5a0;
+}
+.mensaje {
+  min-height: 18px;
+  margin: 8px 0 14px;
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+.bienvenida {
+  position: relative;
+  overflow: hidden;
+  min-height: 310px;
+  padding: 28px 24px 35px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffffa6, #f4f7ffb3);
+}
+.ilustracion {
+  width: 160px;
+  height: 140px;
+  filter: drop-shadow(0 8px 10px #83a6cc18);
+}
+.bienvenida-icono {
+  position: relative;
+  animation: flotar 7s ease-in-out infinite;
+}
+.orbita {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 150px;
+  height: 150px;
+  transform: translateX(-50%);
+  border: 1px solid #dce8f2;
+  border-radius: 50%;
+  box-shadow: 0 0 0 22px #e6eff84d, 0 0 0 45px #e6eff829;
+}
+.bienvenida h3 {
+  position: relative;
+  margin: 12px 0 8px;
+  font-size: 19px;
+  font-weight: 550;
+  letter-spacing: -.4px;
+}
+.bienvenida p {
+  position: relative;
+  margin: 0;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+.datos-clima {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 16px;
+  animation: aparecer .5s ease-out both;
+}
+.clima-principal {
+  position: relative;
+  overflow: hidden;
+  min-height: 310px;
+  padding: 28px;
+  background: linear-gradient(125deg, #e3effde6, #f5f8ffe6);
+}
+.clima-principal::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  top: -70px;
+  right: -65px;
+  border-radius: 50%;
+  background: #ffffff36;
+  pointer-events: none;
+}
+.ubicacion {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding-right: 65px;
+}
+.ubicacion > .icono {
+  margin-top: 6px;
+  width: 18px;
+  height: 18px;
+  color: #6e91b9;
+}
+.ubicacion h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.6px;
+  overflow-wrap: anywhere;
+}
+.ubicacion p {
+  margin: 3px 0 0;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+.temperatura {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: fit-content;
+  margin: 24px 0 0;
+  font-size: clamp(52px, 7vw, 72px);
+  font-weight: 350;
+  letter-spacing: -3px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.unidad {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -1px;
+  color: #597a9f;
+}
+.descripcion {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 24px;
+  max-width: 68%;
+  font-size: 14px;
+  color: #4c6b8e;
+}
+.pie-clima {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding-top: 15px;
+  border-top: 1px solid #cddff1;
+  color: var(--texto-suave);
+  font-size: 10px;
+}
+.clima-icono {
+  position: absolute;
+  right: 17px;
+  top: 85px;
+  width: 145px;
+  height: 130px;
+  animation: flotar 8s ease-in-out infinite;
+}
+.detalles-clima {
+  display: grid;
+  gap: 12px;
   margin: 0;
 }
-
-dt {
-  font-weight: bold;
+.detalle {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: center;
+  padding: 16px 20px;
+  border-radius: 20px;
 }
-
-dd {
-  margin: 0 0 12px;
+.detalle dt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--texto-suave);
+  font-size: 11px;
 }
-
-footer a {
-  color: #23689b;
+.detalle-icono {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
 }
-
+.detalle-icono .icono {
+  width: 19px;
+  height: 19px;
+}
+.tono-durazno {
+  background: #faf0e7;
+  color: #b88564;
+}
+.tono-azul {
+  background: #edf4fd;
+  color: #739cc5;
+}
+.tono-lila {
+  background: #f0edfa;
+  color: #968ab7;
+}
+.detalle dd {
+  margin: -10px 0 0 46px;
+  font-size: 21px;
+  font-weight: 550;
+  letter-spacing: -.5px;
+}
+.cierre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 27px 0 40px;
+  color: var(--texto-suave);
+  font-size: 11px;
+}
+.cierre .icono {
+  width: 17px;
+  height: 17px;
+  color: #8ca8c7;
+}
 footer {
-  padding: 0 20px 24px;
-  text-align: center;
-  color: #526476;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 18px 0 25px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #d6e3f1;
+  font-size: 10px;
+  color: var(--texto-suave);
+}
+footer p {
+  margin: 0;
+}
+footer a {
+  color: #526f92;
+  text-underline-offset: 3px;
+}
+
+/* Movimiento discreto y únicamente en dispositivos con cursor. */
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    transform: translateY(-2px);
+    background: #a8c3e3;
+    box-shadow: 0 7px 18px #83a6cc2e;
+  }
+}
+button:not(:disabled):active {
+  transform: translateY(0);
+}
+@keyframes flotar { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* En el celular, las tarjetas se acomodan en una sola columna. */
+@media (max-width: 700px) {
+  .encabezado {
+    padding: 22px 22px 14px;
+  }
+  .marca {
+    font-size: 23px;
+  }
+  .lema {
+    font-size: 10px;
+  }
+  main {
+    width: calc(100% - 36px);
+  }
+  .introduccion {
+    padding: 25px 0 28px;
+  }
+  .antetitulo {
+    font-size: 9px;
+    letter-spacing: 1.8px;
+  }
+  h1 {
+    letter-spacing: -1.2px;
+  }
+  .introduccion > p:last-child {
+    font-size: 13px;
+  }
+  .buscador {
+    padding: 22px 20px 18px;
+  }
+  .fila-busqueda {
+    flex-direction: column;
+    gap: 10px;
+  }
+  input {
+    font-size: 16px;
+  }
+  button {
+    min-height: 48px;
+  }
+  .nota {
+    font-size: 10px;
+  }
+  #resultados {
+    margin-top: 25px;
+  }
+  .cabecera-resultados h2 {
+    font-size: 13px;
+  }
+  .datos-clima {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .clima-principal {
+    min-height: 290px;
+    padding: 25px;
+  }
+  .temperatura {
+    font-size: 67px;
+  }
+  .clima-icono {
+    top: 85px;
+    right: 14px;
+    width: 125px;
+  }
+  .detalles-clima {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .detalle {
+    padding: 16px 7px;
+    text-align: center;
+    border-radius: 18px;
+  }
+  .detalle dt {
+    flex-direction: column;
+    gap: 7px;
+    font-size: 10px;
+  }
+  .detalle dt > span:last-child {
+    min-height: 30px;
+  }
+  .detalle dd {
+    margin: 4px 0 0;
+    font-size: 17px;
+    letter-spacing: -.6px;
+  }
+  .bienvenida {
+    padding: 28px 16px 32px;
+  }
+  .bienvenida h3 {
+    font-size: 17px;
+  }
+  .bienvenida p {
+    font-size: 12px;
+  }
+  .destello-uno {
+    left: 7%;
+    top: 120px;
+    font-size: 20px;
+  }
+  .destello-dos {
+    right: 5%;
+    top: 180px;
+  }
+  .nube-uno {
+    top: 340px;
+    left: -110px;
+  }
+  .nube-dos {
+    top: 720px;
+    right: -100px;
+  }
+  .cierre {
+    margin: 24px 0 30px;
+    font-size: 10px;
+  }
+  footer {
+    margin: 0 22px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 360px) {
+  .lema {
+    display: none;
+  }
+  .clima-icono {
+    width: 100px;
+    right: 10px;
+    top: 92px;
+  }
+  .temperatura {
+    font-size: 56px;
+  }
+  .unidad {
+    font-size: 19px;
+  }
+  .detalle dd {
+    font-size: 15px;
+  }
+  .salto-escritorio {
+    display: none;
+  }
+}
+
+/* Las personas sensibles al movimiento pueden desactivar los efectos. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

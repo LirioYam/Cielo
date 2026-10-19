@@ -4,6 +4,8 @@ const entradaCiudad = document.getElementById("ciudad");
 const botonConsultar = document.getElementById("boton-consultar");
 const mensaje = document.getElementById("mensaje");
 const datosClima = document.getElementById("datos-clima");
+const bienvenida = document.getElementById("bienvenida");
+const resultados = document.getElementById("resultados");
 
 formulario.addEventListener("submit", consultarClima);
 
@@ -18,6 +20,7 @@ async function consultarClima(evento) {
 
   const nombre = entradaCiudad.value.trim();
   datosClima.hidden = true;
+  bienvenida.hidden = false;
 
   if (nombre === "") {
     mensaje.textContent = "Escribe el nombre de una ciudad.";
@@ -27,6 +30,7 @@ async function consultarClima(evento) {
   mensaje.textContent = "Consultando el clima...";
   botonConsultar.disabled = true;
   entradaCiudad.disabled = true;
+  resultados.setAttribute("aria-busy", "true");
 
   try {
     const ciudad = await buscarCiudad(nombre);
@@ -52,6 +56,7 @@ async function consultarClima(evento) {
     // Se ejecuta también cuando no encontramos una ciudad o sus datos.
     botonConsultar.disabled = false;
     entradaCiudad.disabled = false;
+    resultados.setAttribute("aria-busy", "false");
   }
 }
 
@@ -125,13 +130,27 @@ async function obtenerClima(ciudad) {
 
 function mostrarClima(ciudad, clima) {
   document.getElementById("ciudad-resultado").textContent =
-    `${ciudad.name}, ${ciudad.country || "País no disponible"}`;
-  document.getElementById("temperatura").textContent = `${clima.temperature_2m} °C`;
+    ciudad.name;
+  document.getElementById("pais-resultado").textContent = ciudad.country || "País no disponible";
+  document.getElementById("temperatura").textContent = clima.temperature_2m;
   document.getElementById("sensacion").textContent = `${clima.apparent_temperature} °C`;
   document.getElementById("humedad").textContent = `${clima.relative_humidity_2m} %`;
   document.getElementById("viento").textContent = `${clima.wind_speed_10m} km/h`;
   document.getElementById("descripcion").textContent = describirClima(clima.weather_code);
+  document.getElementById("icono-clima").setAttribute("href", `#${obtenerIconoClima(clima.weather_code)}`);
+  bienvenida.hidden = true;
   datosClima.hidden = false;
+}
+
+// El icono acompaña al texto del clima; no necesita nuevas peticiones a la API.
+function obtenerIconoClima(codigo) {
+  if (codigo === 0 || codigo === 1) return "clima-sol";
+  if (codigo === 3) return "clima-nube";
+  if (codigo === 45 || codigo === 48) return "clima-niebla";
+  if ([71, 73, 75, 77, 85, 86].includes(codigo)) return "clima-nieve";
+  if ([95, 96, 97, 99].includes(codigo)) return "clima-tormenta";
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(codigo)) return "clima-lluvia";
+  return "clima-parcial";
 }
 
 // Open-Meteo devuelve un código numérico; lo traducimos a texto en español.
